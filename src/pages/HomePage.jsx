@@ -4,9 +4,21 @@ import ProductList from '../components/ProductList';
 
 const HomePage = () => {
   return (
-    <div className="bg-gray-100 py-8 w-full">
-      <div className="container mx-auto px-4 w-full">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Electrical Products Store</h1>
+    <div className="relative py-8 w-full min-h-screen">
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 " 
+        style={{
+          backgroundImage: 'url(https://res.cloudinary.com/dusaihqut/image/upload/v1746344363/ingeniero-gonzalez/avatar/bg_kvbye9.jpg)'
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-blue-500/30"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="container mx-auto px-4 w-full relative z-10">
+        <h1 className="text-3xl font-bold text-center mb-8 text-white">Electrical Products Store</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Empty space for Avatar (2/5) - Avatar is fixed position now */}
