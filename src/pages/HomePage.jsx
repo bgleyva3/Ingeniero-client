@@ -9,10 +9,8 @@ const HomePage = () => {
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Electrical Products Store</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Avatar section (2/5) */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-4 h-[550px]">
-            <Avatar />
-          </div>
+          {/* Empty space for Avatar (2/5) - Avatar is fixed position now */}
+          <div className="lg:col-span-2 h-[550px]"></div>
           
           {/* Product list section (3/5) */}
           <div className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden min-h-[550px]" id="products">
@@ -23,6 +21,13 @@ const HomePage = () => {
               <ProductList />
             </div>
           </div>
+        </div>
+      </div>
+      
+      {/* Fixed Avatar container at bottom of viewport */}
+      <div className="fixed bottom-0 left-0 w-full lg:w-2/5 h-[550px] pointer-events-none">
+        <div className="h-full w-full pt-8">
+          <Avatar />
         </div>
       </div>
     </div>
