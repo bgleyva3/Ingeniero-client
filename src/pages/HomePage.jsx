@@ -1,6 +1,6 @@
 import React from 'react';
 import Avatar from '../components/Avatar';
-import ProductList from '../components/ProductList';
+import ChatBox from '../components/ChatBox';
 
 const HomePage = () => {
   return (
@@ -25,13 +25,8 @@ const HomePage = () => {
           <div className="lg:col-span-2 h-[550px]"></div>
           
           {/* Product list section (3/5) */}
-          <div className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden min-h-[550px]" id="products">
-            <div className="p-4 bg-blue-500 text-white">
-              <h2 className="text-xl font-semibold">Our Products</h2>
-            </div>
-            <div className="h-[calc(550px-4rem)] overflow-y-auto">
-              <ProductList />
-            </div>
+          <div id="chat-box" className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden min-h-[550px]">
+            <ChatBox />
           </div>
         </div>
       </div>
