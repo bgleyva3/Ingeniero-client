@@ -12,7 +12,7 @@ const Header = () => {
               <Link to="/" className="hover:text-blue-200 transition-colors">Home</Link>
             </li>
             <li>
-              <a href="#products" className="hover:text-blue-200 transition-colors">Products</a>
+              <Link to="/productos" className="hover:text-blue-200 transition-colors">Productos</Link>
             </li>
           </ul>
         </nav>
