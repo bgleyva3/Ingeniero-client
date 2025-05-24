@@ -83,7 +83,7 @@ const ChatBox = () => {
               className={`flex ${msg.from === 'customer' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`px-4 py-2 rounded-lg max-w-xs ${
+                className={`px-4 py-2 rounded-lg max-w-[70%] ${
                   msg.from === 'customer'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 text-gray-900'
@@ -95,9 +95,7 @@ const ChatBox = () => {
             {/* After the latest agent message, show split message and product cards */}
             {msg.from === 'agent' && idx === messages.length - 1 && splitMessage && (
               <>
-                {/* Intro */}
-                {splitMessage.intro && <div className="mb-2">{splitMessage.intro}</div>}
-                {/* Product cards */}
+                {/* Product cards (optional, remove if you don't want them) */}
                 {splitMessage.products && splitMessage.products.length > 0 && (
                   <div className="product-cards-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
                     {getProductsBySKUs(splitMessage.products).map(product => (
@@ -105,8 +103,6 @@ const ChatBox = () => {
                     ))}
                   </div>
                 )}
-                {/* Outro */}
-                {splitMessage.outro && <div className="mt-2">{splitMessage.outro}</div>}
               </>
             )}
           </React.Fragment>
