@@ -18,15 +18,17 @@ const HomePage = () => {
       
       {/* Content */}
       <div className="container mx-auto px-4 w-full relative z-10">
-        <h1 className="text-3xl font-bold text-center mb-8 text-white">Electrical Products Store</h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Empty space for Avatar (2/5) - Avatar is fixed position now */}
-          <div className="lg:col-span-2 h-[550px]"></div>
-          
-          {/* Product list section (3/5) */}
-          <div id="chat-box" className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden min-h-[550px]">
-            <ChatBox />
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Avatar space (left, symmetrical to chat box right margin) */}
+          <div className="hidden lg:block lg:basis-2/5 lg:shrink-0"></div>
+          {/* Chat box section (right, symmetrical to avatar) */}
+          <div className="w-full flex flex-col items-center">
+            <div className="w-full mx-auto z-20">
+              <h1 className="text-2xl font-bold text-center text-white my-4 rounded-t-lg">Tu Proveedor de Equipo Electrico en México</h1>
+            </div>
+            <div className="w-full rounded-b-lg overflow-hidden min-h-[70vh] bg-white shadow-md">
+              <ChatBox />
+            </div>
           </div>
         </div>
       </div>

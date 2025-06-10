@@ -72,18 +72,18 @@ const ChatBox = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-red">
       <div className="p-4 bg-blue-500 text-white">
-        <h2 className="text-xl font-semibold">Chat con el Asistente</h2>
+        <h2 className="text-xl font-semibold">Chatea con el Ingeniero Gonzalez</h2>
       </div>
-      <div className="p-4 space-y-4 bg-gray-50 overflow-y-auto" style={{ height: '350px' }}>
+      <div className="flex-1 p-4 space-y-4 bg-gray-50 overflow-y-auto">
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
             <div
               className={`flex ${msg.from === 'customer' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`px-4 py-2 rounded-lg max-w-[70%] ${
+                className={`px-4 py-2 rounded-lg max-w-[85%] ${
                   msg.from === 'customer'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-200 text-gray-900'
@@ -97,7 +97,7 @@ const ChatBox = () => {
               <>
                 {/* Product cards (optional, remove if you don't want them) */}
                 {splitMessage.products && splitMessage.products.length > 0 && (
-                  <div className="product-cards-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                     {getProductsBySKUs(splitMessage.products).map(product => (
                       <ProductCard key={product.sku} product={product} />
                     ))}
@@ -122,7 +122,7 @@ const ChatBox = () => {
         <input
           ref={inputRef}
           type="text"
-          className="flex-1 border rounded-lg px-3 py-2 mr-2 focus:outline-none"
+          className="flex-1 border rounded-lg px-4 py-3 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Escribe tu mensaje..."
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -130,7 +130,7 @@ const ChatBox = () => {
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+          className="bg-blue-500 text-white px-6 py-3 rounded-lg disabled:opacity-50 hover:bg-blue-600 transition-colors"
           disabled={loading || animating}
         >
           Enviar

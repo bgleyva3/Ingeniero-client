@@ -1,6 +1,6 @@
 # Ingeniero González Client Application
 
-This is the client-side application for the Ingeniero González Electrical Products E-commerce website.
+This is the client-side application for the Ingeniero Gonzalez Electrical Products E-commerce website.
 
 ## Features
 
