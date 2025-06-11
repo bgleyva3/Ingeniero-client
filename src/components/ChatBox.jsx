@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import ProductCard from './ProductCard';
+import { API_ENDPOINTS } from '../config/api';
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([
@@ -40,43 +41,53 @@ const ChatBox = () => {
 
     try {
       // 1. Get agent response
-      const res = await axios.post('/api/agent/query', { message: userMessage });
+      const res = await axios.post(API_ENDPOINTS.agent.query, { 
+        message: userMessage,
+        chat_history: messages.map(msg => ({
+          role: msg.from === 'customer' ? 'user' : 'assistant',
+          content: msg.text
+        }))
+      });
       setReferencedProducts(res.data.referencedProducts || []);
       setMessages(msgs => [...msgs, { from: 'agent', text: '' }]);
 
       // 2. Split the message using the backend AI endpoint
-      const splitRes = await axios.post('/api/utils/split-agent-message', {
+      const splitRes = await axios.post(API_ENDPOINTS.utils.splitMessage, {
         agentReply: res.data.agentReply,
         referencedProducts: res.data.referencedProducts || []
       });
       setSplitMessage(splitRes.data);
 
-      // 3. Animate the intro (optional)
-      await animateAgentReply(splitRes.data.intro || '...');
-    } catch (err) {
+      // 3. Animate the intro part of the message
+      if (splitRes.data.intro) {
+        await animateAgentReply(splitRes.data.intro);
+      }
+
+      // 4. If there's an outro, animate it after a delay
+      if (splitRes.data.outro) {
+        setTimeout(async () => {
+          await animateAgentReply(splitRes.data.outro);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error:', error);
       setMessages(msgs => [
         ...msgs,
-        { from: 'agent', text: 'Lo siento, hubo un error. Intenta de nuevo.' }
+        { from: 'agent', text: 'Lo siento, hubo un error al procesar tu mensaje.' }
       ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper to get product objects by SKU
+  // Helper function to get products by SKUs
   const getProductsBySKUs = (skus) => {
-    if (!referencedProducts || !skus) return [];
-    return referencedProducts.filter(p =>
-      skus.includes(Number(p.sku)) || skus.includes(String(p.sku))
-    );
+    return referencedProducts.filter(p => skus.includes(p.sku));
   };
 
   return (
-    <div className="flex flex-col h-full bg-red">
-      <div className="p-4 bg-blue-500 text-white">
-        <h2 className="text-xl font-semibold">Chatea con el Ingeniero Gonzalez</h2>
-      </div>
-      <div className="flex-1 p-4 space-y-4 bg-gray-50 overflow-y-auto">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
             <div
@@ -95,7 +106,7 @@ const ChatBox = () => {
             {/* After the latest agent message, show split message and product cards */}
             {msg.from === 'agent' && idx === messages.length - 1 && splitMessage && (
               <>
-                {/* Product cards (optional, remove if you don't want them) */}
+                {/* Product cards */}
                 {splitMessage.products && splitMessage.products.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                     {getProductsBySKUs(splitMessage.products).map(product => (
@@ -122,16 +133,16 @@ const ChatBox = () => {
         <input
           ref={inputRef}
           type="text"
-          className="flex-1 border rounded-lg px-4 py-3 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Escribe tu mensaje..."
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Escribe tu mensaje..."
+          className="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={loading || animating}
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg disabled:opacity-50 hover:bg-blue-600 transition-colors"
-          disabled={loading || animating}
+          className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          disabled={loading || animating || !input.trim()}
         >
           Enviar
         </button>
