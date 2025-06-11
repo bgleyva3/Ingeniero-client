@@ -5,84 +5,201 @@ import { API_ENDPOINTS } from '../config/api';
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([
-    { from: 'agent', text: '¡Hola! ¿En qué puedo ayudarte hoy?' }
+    { from: 'agent', text: '¡Hola! Soy tu asistente técnico especializado en electricidad y productos eléctricos. ¿En qué puedo ayudarte hoy?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [animating, setAnimating] = useState(false);
-  const [referencedProducts, setReferencedProducts] = useState([]);
-  const [splitMessage, setSplitMessage] = useState(null);
+  const [chatHistory, setChatHistory] = useState([]);
   const inputRef = useRef(null);
 
-  // Animate agent reply word by word (for intro/outro)
-  const animateAgentReply = async (fullText) => {
+  // Animate agent reply word by word
+  const animateAgentReply = async (fullText, messageIndex) => {
     setAnimating(true);
     let displayed = '';
     const words = fullText.split(' ');
     for (let i = 0; i < words.length; i++) {
       displayed += (i === 0 ? '' : ' ') + words[i];
-      setMessages(msgs => [
-        ...msgs.slice(0, -1),
-        { from: 'agent', text: displayed }
-      ]);
-      await new Promise(res => setTimeout(res, 60));
+      setMessages(msgs => {
+        const newMsgs = [...msgs];
+        newMsgs[messageIndex].text = displayed;
+        return newMsgs;
+      });
+      await new Promise(res => setTimeout(res, 50));
     }
     setAnimating(false);
     inputRef.current?.focus();
   };
 
+  // Custom ProductCard for chat with enhanced styling
+  const ChatProductCard = ({ product }) => (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-102 max-w-sm">
+      <div className="h-32 bg-gray-200 overflow-hidden">
+        {product.imageUrl ? (
+          <img 
+            src={product.imageUrl} 
+            alt={product.name} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
+            <span className="text-blue-600 text-xs">📦 Producto</span>
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        <h4 className="text-sm font-semibold text-gray-800 mb-1 line-clamp-2">{product.name}</h4>
+        <p className="text-gray-600 text-xs mb-2 line-clamp-2">{product.description}</p>
+        <div className="flex justify-between items-center">
+          <span className="text-blue-600 font-bold text-sm">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</span>
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{product.category}</span>
+        </div>
+        <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
+          <span>SKU: {product.sku}</span>
+          <button className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
+            Ver detalles
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Info request form component
+  const InfoRequestForm = ({ requiredInfo, onSubmit }) => {
+    const [formData, setFormData] = useState({});
+    
+    const handleInputChange = (field, value) => {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      onSubmit(formData);
+    };
+
+    const getFieldLabel = (field) => {
+      const labels = {
+        email: 'Correo electrónico',
+        phone: 'Teléfono',
+        name: 'Nombre',
+        address: 'Dirección',
+        company: 'Empresa'
+      };
+      return labels[field] || field;
+    };
+
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-2 max-w-md">
+        <h4 className="text-sm font-semibold text-blue-800 mb-3">Información adicional requerida:</h4>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {requiredInfo.map(field => (
+            <div key={field}>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                {getFieldLabel(field)}
+              </label>
+              <input
+                type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'}
+                className="w-full p-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData[field] || ''}
+                onChange={(e) => handleInputChange(field, e.target.value)}
+                required
+              />
+            </div>
+          ))}
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded text-sm hover:bg-blue-600 transition-colors"
+          >
+            Enviar información
+          </button>
+        </form>
+      </div>
+    );
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    
     const userMessage = input.trim();
     setMessages(msgs => [...msgs, { from: 'customer', text: userMessage }]);
     setInput('');
     setLoading(true);
 
     try {
-      // 1. Get agent response
-      const res = await axios.post(API_ENDPOINTS.agent.query, { 
-        message: userMessage,
-        chat_history: messages.map(msg => ({
-          role: msg.from === 'customer' ? 'user' : 'assistant',
-          content: msg.text
-        }))
+      // Use the new RAG API endpoint
+      const response = await axios.post(API_ENDPOINTS.rag.query, {
+        query: userMessage,
+        k: 5,
+        chat_history: chatHistory
       });
-      setReferencedProducts(res.data.referencedProducts || []);
-      setMessages(msgs => [...msgs, { from: 'agent', text: '' }]);
 
-      // 2. Split the message using the backend AI endpoint
-      const splitRes = await axios.post(API_ENDPOINTS.utils.splitMessage, {
-        agentReply: res.data.agentReply,
-        referencedProducts: res.data.referencedProducts || []
-      });
-      setSplitMessage(splitRes.data);
+      const { answer, response_type, products, requires_info, chat_history: newChatHistory } = response.data;
+      
+      // Update chat history
+      setChatHistory(newChatHistory);
 
-      // 3. Animate the intro part of the message
-      if (splitRes.data.intro) {
-        await animateAgentReply(splitRes.data.intro);
-      }
+      // Add the agent message to the UI
+      const messageIndex = messages.length + 1;
+      setMessages(msgs => [...msgs, { 
+        from: 'agent', 
+        text: '',
+        response_type,
+        products: products || [],
+        requires_info: requires_info || []
+      }]);
 
-      // 4. If there's an outro, animate it after a delay
-      if (splitRes.data.outro) {
-        setTimeout(async () => {
-          await animateAgentReply(splitRes.data.outro);
-        }, 1000);
-      }
+      // Animate the text response
+      await animateAgentReply(answer, messageIndex);
+
     } catch (error) {
       console.error('Error:', error);
       setMessages(msgs => [
         ...msgs,
-        { from: 'agent', text: 'Lo siento, hubo un error al procesar tu mensaje.' }
+        { from: 'agent', text: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta nuevamente.' }
       ]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to get products by SKUs
-  const getProductsBySKUs = (skus) => {
-    return referencedProducts.filter(p => skus.includes(p.sku));
+  const handleInfoSubmit = async (formData) => {
+    const infoMessage = `Información proporcionada: ${Object.entries(formData).map(([key, value]) => `${key}: ${value}`).join(', ')}`;
+    
+    setMessages(msgs => [...msgs, { from: 'customer', text: infoMessage }]);
+    setLoading(true);
+
+    try {
+      const response = await axios.post(API_ENDPOINTS.rag.query, {
+        query: `He proporcionado la información solicitada: ${infoMessage}`,
+        k: 5,
+        chat_history: chatHistory
+      });
+
+      const { answer, response_type, products, requires_info, chat_history: newChatHistory } = response.data;
+      
+      setChatHistory(newChatHistory);
+      
+      const messageIndex = messages.length + 1;
+      setMessages(msgs => [...msgs, { 
+        from: 'agent', 
+        text: '',
+        response_type,
+        products: products || [],
+        requires_info: requires_info || []
+      }]);
+
+      await animateAgentReply(answer, messageIndex);
+
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(msgs => [
+        ...msgs,
+        { from: 'agent', text: 'Gracias por la información. Te contactaremos pronto.' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,61 +207,73 @@ const ChatBox = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
-            <div
-              className={`flex ${msg.from === 'customer' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`px-4 py-2 rounded-lg max-w-[85%] ${
-                  msg.from === 'customer'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-900'
-                }`}
-              >
+            <div className={`flex ${msg.from === 'customer' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`px-4 py-2 rounded-lg max-w-[85%] ${
+                msg.from === 'customer'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-900'
+              }`}>
                 {msg.text}
               </div>
             </div>
-            {/* After the latest agent message, show split message and product cards */}
-            {msg.from === 'agent' && idx === messages.length - 1 && splitMessage && (
-              <>
-                {/* Product cards */}
-                {splitMessage.products && splitMessage.products.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                    {getProductsBySKUs(splitMessage.products).map(product => (
-                      <ProductCard key={product.sku} product={product} />
+            
+            {/* Show products if this is an agent message with products */}
+            {msg.from === 'agent' && msg.products && msg.products.length > 0 && msg.text && (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] w-full">
+                  <div className="text-sm text-gray-600 mb-2 px-2">
+                    💡 Productos recomendados para ti:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {msg.products.map(product => (
+                      <ChatProductCard key={product.id} product={product} />
                     ))}
                   </div>
-                )}
-              </>
+                </div>
+              </div>
+            )}
+
+            {/* Show info request form if needed */}
+            {msg.from === 'agent' && msg.requires_info && msg.requires_info.length > 0 && msg.text && (
+              <div className="flex justify-start">
+                <InfoRequestForm 
+                  requiredInfo={msg.requires_info}
+                  onSubmit={handleInfoSubmit}
+                />
+              </div>
             )}
           </React.Fragment>
         ))}
+        
         {loading && (
           <div className="flex justify-start">
             <div className="px-4 py-2 rounded-lg bg-gray-200 text-gray-900 flex items-center">
-              <span className="animate-bounce">...</span>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
             </div>
           </div>
         )}
       </div>
-      <form
-        onSubmit={handleSend}
-        className="p-4 border-t flex items-center bg-white"
-      >
+      
+      <form onSubmit={handleSend} className="p-4 border-t flex items-center bg-white">
         <input
           ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribe tu mensaje..."
+          placeholder="Pregunta sobre productos, normas CFE, instalaciones eléctricas..."
           className="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={loading || animating}
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
           disabled={loading || animating || !input.trim()}
         >
-          Enviar
+          {loading ? '...' : 'Enviar'}
         </button>
       </form>
     </div>
