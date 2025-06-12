@@ -26,7 +26,7 @@ const HomePage = () => {
             <div className="w-full mx-auto z-20">
               <h1 className="text-2xl font-bold text-center text-white my-4 rounded-t-lg">Tu Proveedor de Equipo Electrico en México</h1>
             </div>
-            <div className="w-full rounded-b-lg overflow-hidden min-h-[70vh] bg-white shadow-md">
+            <div className="w-full rounded-b-lg overflow-hidden h-[70vh] bg-white shadow-md">
               <ChatBox />
             </div>
           </div>
