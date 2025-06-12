@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from './ProductCard';
 import { API_ENDPOINTS } from '../config/api';
@@ -12,6 +12,21 @@ const ChatBox = () => {
   const [animating, setAnimating] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const inputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+  // Scroll to the latest message
+  const scrollToLatestMessage = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    // Small delay to ensure DOM has updated with new content
+    const timer = setTimeout(scrollToLatestMessage, 50);
+    return () => clearTimeout(timer);
+  }, [messages, loading]);
 
   // Animate agent reply word by word
   const animateAgentReply = async (fullText, messageIndex) => {
@@ -29,6 +44,8 @@ const ChatBox = () => {
     }
     setAnimating(false);
     inputRef.current?.focus();
+    // Scroll to the latest message after animation completes
+    setTimeout(scrollToLatestMessage, 100);
   };
 
   // Custom ProductCard for chat with enhanced styling
@@ -125,6 +142,9 @@ const ChatBox = () => {
     setMessages(msgs => [...msgs, { from: 'customer', text: userMessage }]);
     setInput('');
     setLoading(true);
+    
+    // Scroll immediately after user sends message
+    setTimeout(scrollToLatestMessage, 50);
 
     try {
       // Use the new RAG API endpoint
@@ -149,6 +169,9 @@ const ChatBox = () => {
         requires_info: requires_info || []
       }]);
 
+      // Scroll immediately after adding agent message
+      setTimeout(scrollToLatestMessage, 50);
+
       // Animate the text response
       await animateAgentReply(answer, messageIndex);
 
@@ -158,6 +181,7 @@ const ChatBox = () => {
         ...msgs,
         { from: 'agent', text: 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta nuevamente.' }
       ]);
+      setTimeout(scrollToLatestMessage, 100);
     } finally {
       setLoading(false);
     }
@@ -168,6 +192,9 @@ const ChatBox = () => {
     
     setMessages(msgs => [...msgs, { from: 'customer', text: infoMessage }]);
     setLoading(true);
+    
+    // Scroll immediately after info form submission
+    setTimeout(scrollToLatestMessage, 50);
 
     try {
       const response = await axios.post(API_ENDPOINTS.rag.query, {
@@ -189,6 +216,9 @@ const ChatBox = () => {
         requires_info: requires_info || []
       }]);
 
+      // Scroll immediately after adding agent message from info form
+      setTimeout(scrollToLatestMessage, 50);
+
       await animateAgentReply(answer, messageIndex);
 
     } catch (error) {
@@ -197,6 +227,7 @@ const ChatBox = () => {
         ...msgs,
         { from: 'agent', text: 'Gracias por la información. Te contactaremos pronto.' }
       ]);
+      setTimeout(scrollToLatestMessage, 100);
     } finally {
       setLoading(false);
     }
@@ -204,7 +235,7 @@ const ChatBox = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
             <div className={`flex ${msg.from === 'customer' ? 'justify-end' : 'justify-start'}`}>
