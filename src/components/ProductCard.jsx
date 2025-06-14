@@ -2,9 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
+  console.log('ProductCard product:', product);
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <Link to={`/productos/${product._id || product.id}`}>
+      <Link to={`/productos/${product.slug}?sku=${product.sku}`}>
         <div className="h-48 bg-gray-200 overflow-hidden">
           {product.imageUrl ? (
             <img 
@@ -22,7 +23,9 @@ const ProductCard = ({ product }) => {
           <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">{product.name || product.title}</h3>
           <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-blue-600 font-bold">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</span>
+            {product.showPrice && (
+              <span className="text-blue-600 font-bold">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</span>
+            )}
             <span className="text-sm text-gray-500">{product.category}</span>
           </div>
         </div>

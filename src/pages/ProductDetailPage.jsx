@@ -113,7 +113,9 @@ const ProductDetailPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm text-gray-500 mb-1">Price</h3>
-                    <p className="text-2xl font-bold text-blue-600">${product.price.toFixed(2)}</p>
+                    {product.showPrice && (
+                      <p className="text-2xl font-bold text-blue-600">${product.price.toFixed(2)}</p>
+                    )}
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-sm text-gray-500 mb-1">Category</h3>

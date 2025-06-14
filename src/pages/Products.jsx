@@ -27,6 +27,9 @@ const Products = () => {
 
         const response = await axios.get(API_ENDPOINTS.products.getAll + query);
         setProducts(response.data);
+        if (response.data && response.data.length > 0) {
+          console.log('First product from API:', response.data[0]);
+        }
         // Since FastAPI doesn't have built-in pagination, we'll calculate total pages
         setTotalPages(Math.ceil(response.data.length / PAGE_SIZE));
       } catch (err) {

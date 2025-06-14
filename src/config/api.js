@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   products: {
     getAll: `${API_BASE_URL}/api/products`,
     getById: (id) => `${API_BASE_URL}/api/products/${id}`,
+    getBySku: `${API_BASE_URL}/api/products/by-sku/`,
     create: `${API_BASE_URL}/api/products`,
     update: (id) => `${API_BASE_URL}/api/products/${id}`,
     delete: (id) => `${API_BASE_URL}/api/products/${id}`,
