@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from './ProductCard';
 import { API_ENDPOINTS } from '../config/api';
+import { Link } from 'react-router-dom';
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([
@@ -50,7 +51,10 @@ const ChatBox = () => {
 
   // Custom ProductCard for chat with enhanced styling
   const ChatProductCard = ({ product }) => (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-102 max-w-sm">
+    <Link 
+      to={`/productos/${product.slug}?sku=${product.sku}`}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-102 max-w-sm"
+    >
       <div className="h-32 bg-gray-200 overflow-hidden">
         {product.imageUrl ? (
           <img 
@@ -73,12 +77,9 @@ const ChatBox = () => {
         </div>
         <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
           <span>SKU: {product.sku}</span>
-          <button className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors">
-            Ver detalles
-          </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 
   // Info request form component
@@ -311,4 +312,4 @@ const ChatBox = () => {
   );
 };
 
-export default ChatBox; 
+export default ChatBox;
