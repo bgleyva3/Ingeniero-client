@@ -3,6 +3,7 @@ import axios from 'axios';
 import ProductCard from './ProductCard';
 import { API_ENDPOINTS } from '../config/api';
 import { Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 const ChatBox = () => {
   const [messages, setMessages] = useState([
@@ -14,6 +15,7 @@ const ChatBox = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const inputRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const [modalProduct, setModalProduct] = useState(null);
 
   // Scroll to the latest message
   const scrollToLatestMessage = () => {
@@ -51,9 +53,9 @@ const ChatBox = () => {
 
   // Custom ProductCard for chat with enhanced styling
   const ChatProductCard = ({ product }) => (
-    <Link 
-      to={`/productos/${product.slug}?sku=${product.sku}`}
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-102 max-w-sm"
+    <div
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:scale-102 max-w-sm cursor-pointer"
+      onClick={() => setModalProduct(product)}
     >
       <div className="h-32 bg-gray-200 overflow-hidden">
         {product.imageUrl ? (
@@ -75,12 +77,77 @@ const ChatBox = () => {
           <span className="text-blue-600 font-bold text-sm">${product.price?.toFixed ? product.price.toFixed(2) : product.price}</span>
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{product.category}</span>
         </div>
-        <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
-          <span>SKU: {product.sku}</span>
+      </div>
+    </div>
+  );
+
+  // Modal for product details
+  const ProductModal = ({ product, onClose }) => {
+    const modalRef = useRef();
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (modalRef.current && !modalRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [onClose]);
+
+    if (!product) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div ref={modalRef} className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto relative p-6">
+          {/* External link icon top left */}
+          <Link
+            to={`/productos/${product.slug}?sku=${product.sku}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-2 left-2 text-gray-500 hover:text-blue-600 focus:outline-none"
+            title="Ver detalles del producto"
+            aria-label="Ver detalles del producto"
+            onClick={onClose}
+          >
+            {/* External link SVG icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 3h7m0 0v7m0-7L10 14m-7 7h7a2 2 0 002-2v-7" />
+            </svg>
+          </Link>
+          <button
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            &times;
+          </button>
+          <div className="flex flex-col items-center">
+            {product.imageUrl && (
+              <img src={product.imageUrl} alt={product.name} className="w-48 h-48 object-contain mb-4" />
+            )}
+            <h2 className="text-xl font-bold mb-2 text-center">{product.name}</h2>
+            <div className="text-gray-700 text-sm mb-2 w-full">
+              <strong>Categoría:</strong> {product.category}
+            </div>
+            <div className="text-blue-600 font-bold text-lg mb-2 w-full text-center">
+              ${product.price?.toFixed ? product.price.toFixed(2) : product.price}
+            </div>
+            <div className="text-gray-600 text-sm mb-4 w-full whitespace-pre-line">
+              {product.description}
+            </div>
+            {/* Show more product details if available */}
+            {product.sku && (
+              <div className="text-xs text-gray-500 mb-1 w-full"><strong>SKU:</strong> {product.sku}</div>
+            )}
+            {product.id && (
+              <div className="text-xs text-gray-500 mb-1 w-full"><strong>ID:</strong> {product.id}</div>
+            )}
+            {/* Add more fields as needed */}
+          </div>
         </div>
       </div>
-    </Link>
-  );
+    );
+  };
 
   // Info request form component
   const InfoRequestForm = ({ requiredInfo, onSubmit }) => {
@@ -91,6 +158,7 @@ const ChatBox = () => {
     };
 
     const handleSubmit = (e) => {
+      console.log('handleSubmit');
       e.preventDefault();
       onSubmit(formData);
     };
@@ -136,6 +204,7 @@ const ChatBox = () => {
   };
 
   const handleSend = async (e) => {
+    console.log('handleSend');
     e.preventDefault();
     if (!input.trim()) return;
     
@@ -147,11 +216,14 @@ const ChatBox = () => {
     // Scroll immediately after user sends message
     setTimeout(scrollToLatestMessage, 50);
 
+    console.log('endpoint:', API_ENDPOINTS.rag.query)
+    console.log('userMessage:', userMessage)
+    console.log('chatHistory:', chatHistory)
+
     try {
       // Use the new RAG API endpoint
       const response = await axios.post(API_ENDPOINTS.rag.query, {
         query: userMessage,
-        k: 5,
         chat_history: chatHistory
       });
 
@@ -236,6 +308,10 @@ const ChatBox = () => {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Product Modal */}
+      {modalProduct && (
+        <ProductModal product={modalProduct} onClose={() => setModalProduct(null)} />
+      )}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <React.Fragment key={idx}>
@@ -245,7 +321,7 @@ const ChatBox = () => {
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-900'
               }`}>
-                {msg.text}
+                <ReactMarkdown>{msg.text}</ReactMarkdown>
               </div>
             </div>
             
