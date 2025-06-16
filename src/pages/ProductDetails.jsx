@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 
 const ProductDetails = () => {
-  const { slug } = useParams();
   const location = useLocation();
   const [product, setProduct] = useState(null);
 
@@ -16,9 +15,11 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       const sku = getQueryParam('sku');
+      const endpoint = `${API_ENDPOINTS.products.getBySku}${sku}`
+      console.log('Endpoint:', endpoint);
       if (!sku) return;
       try {
-        const response = await axios.get(`${API_ENDPOINTS.products.getBySku}${sku}`);
+        const response = await axios.get(endpoint);
         setProduct(response.data);
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -47,6 +48,14 @@ const ProductDetails = () => {
       )}
       {product.showPrice && (
         <p className="font-semibold">${product.price} MXN.</p>
+      )}
+      {/* PDF Link */}
+      {product.pdfUrl && (
+        <div className="mt-4">
+          <a href={product.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium text-lg flex items-center gap-2">
+            <span role="img" aria-label="PDF">📄</span> Ver ficha técnica (PDF)
+          </a>
+        </div>
       )}
       <Link to="/productos" className="text-blue-500 hover:underline">Volver a productos</Link>
       {/* Add more details as needed */}
